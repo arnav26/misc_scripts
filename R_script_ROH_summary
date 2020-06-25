@@ -1,4 +1,6 @@
 #Takes input of plink's --freq and --homozyg. Summarizes and plots ROH stats. Compares FROH and FHOM.
+#FID	Total_No_ROH	Avg_No_of_ROH	Std.Deviation	Min_No_ROH	Max_No_ROH	Total_ROH_Length_Mb	Avg_ROH_Length_MB	FROH	Std.deviation	FHOM	Std.deviation	Correlation_FROH_FHOM
+
 
 library(tidyverse)
 ROH_ROH <- read.table("plink.hom", header = T)
