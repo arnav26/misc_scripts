@@ -1,0 +1,13 @@
+#Takes input of plink's --freq and --homozyg. Summarizes and plots ROH stats. Compares FROH and FHOM.
+
+library(tidyverse)
+ROH_ROH <- read.table("plink.hom", header = T)
+IND_ROH <- read.table("plink.hom.indiv", header = T)
+tbl3 <- read.table("plink.het", header  = T)
+IND_ROH <- IND_ROH %>% mutate(FROH = KB/2478753)
+IND_ROH <- cbind(IND_ROH,tbl3$F)
+colnames(IND_ROH)[8] <- "FHOM"
+summary <- IND_ROH %>% group_by(FID) %>% summarize(sum(NSEG), mean(NSEG),sd(NSEG), min(NSEG), max(NSEG), as.integer(mean(KB)/1000), as.integer(mean(KBAVG)/1000),mean(FROH), sd(FROH), mean(FHOM), sd(FHOM), cor(FROH,FHOM))
+ggplot(summary,mapping = aes(FID,`as.integer(mean(KB)/1000)`)) + geom_bar(stat="identity") + xlab("Breed") + ylab('Mean genome length covered by ROH (Mb)')
+tmp <- ROH_ROH %>% group_by(FID,CHR,IID) %>% summarize(ROH_MB = sum(KB/1000))
+tmp %>% group_by(FID,CHR) %>% summarize(ROH_MB_mean = mean(ROH_MB)) %>% ggplot(mapping = aes(CHR,ROH_MB_mean)) + geom_col(position=position_dodge(0.7), width = 0.6, aes(fill=FID)) + xlab("Chromosome") + ylab("ROH (Mb)") + scale_x_discrete(limits = seq(1:24)) + labs(fill="Breeds")
