@@ -1,0 +1,30 @@
+#For assignment of ancestral alleles to a target dataset, the 50K ancestral allele data was downloaded from https://onlinelibrary.wiley.com/doi/abs/10.1111/jbg.12095
+
+#take out the markers your file and ancestral file
+cat vrindaclean.bim | cut -f1,2,4,5,6 > vrindamarkers
+cat Bovine50K_SNP_Annotation.txt | cut -f1,11 > ancmarkers
+cat ancmarkers | cut -d ";" -f1 > tmp
+cat tmp > ancmarkers
+
+#combine the two marker files. Column 6 is ancestral allele.
+awk 'NR==FNR{a[$1] = $2;next}{$6=a[$2];print}' ancmarkers vrindamarkers > combined
+
+#Check loci where none of your alleles match ancestral allele. 
+awk '{if($6 != $4 && $6 != $5) print $2;}' combined > forflip
+
+#Flip these loci
+plink --bfile vrindaclean --flip forflip --make-bed --out vrindacleanflipped –cow
+
+#Repeat the above using flipped file. 
+cat vrindacleanflipped.bim | cut -f1,2,4,5,6 > vrindamarkers
+awk 'NR==FNR{a[$1] = $2;next}{$6=a[$2];print}' ancmarkers vrindamarkers > combined
+
+#Assign ancestral allele for each marker. For the markers which are not presesnt in ancestral allele panel, set the major allele as ancestral allele. 
+
+awk '{
+if($6 == $4)
+print $2" "$1" "$3" "$4" "$5;
+if($6 == $5)
+print $2" "$1" "$3" "$5" "$4;
+if($6 == "")
+print $2" "$1" "$3" "$5" "$4;}' combined > rehhmap
