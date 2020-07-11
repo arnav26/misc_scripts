@@ -1,0 +1,38 @@
+library(rehh)
+library(tidyverse)
+library(vcfR)
+
+for(i in 1:29) {
+  # vcf file name for each chromosome
+  vcf_file = paste(i, ".vrindacleanphased.vcf.gz", sep = "")
+  # create internal representation
+  hh <- data2haplohh(hap_file = vcf_file,
+                     polarize_vcf = F,
+                     map_file = "rehhmap", 
+                     chr.name = i,
+                     allele_coding = "map")
+  # perform scan on a single chromosome (calculate iHH values)
+  scan <- scan_hh(hh)
+  # concatenate chromosome-wise data frames to
+  # a data frame for the whole genome
+  if (i == 1) {
+    wgscan <- scan
+  } else {
+    wgscan <- rbind(wgscan, scan)
+  }
+}
+
+# calculate genome-wide iHS values
+wgscan.ihs <- ihh2ihs(wgscan,freqbin = 0.01, min_maf = 0.01)
+results <- as.data.frame(wgscan.ihs$ihs)
+results <- results %>% filter(!is.na(results$IHS))
+
+#Plot absolute iHS value
+manhattanplot(results,pval = F,threshold = 3,ignore_sign = T)
+
+#calculate candidate regions where an SNP has maximum iHS >3. Scan window size 40 KB.
+candidate <- calc_candidate_regions(results,threshold = 3, ignore_sign = T,window_size = 40000,join_neighbors = T)
+
+#To concatanate CHR:Start:End for biomart friendly search format and write output
+output <- candidate %>% unite("merged",CHR:START:END,sep = ":") %>% select(merged)
+write.table(output,"candidate_regions",row.names = F,col.names = F,quote = F)
