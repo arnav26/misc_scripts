@@ -1,0 +1,175 @@
+library(rehh)
+library(tidyverse)
+library(vcfR)
+library(biomaRt)
+#Vrinda scan
+for(i in 1:29) {
+  # vcf file name for each chromosome
+  vcf_file = paste(i, ".vrinda.vcf.gz", sep = "")
+  # create internal representation
+  hh <- data2haplohh(hap_file = vcf_file,
+                     polarize_vcf = F,
+                     map_file = "rehhmap", 
+                     chr.name = i,
+                     allele_coding = "map")
+  # perform scan on a single chromosome (calculate iHH values)
+  scan <- scan_hh(hh)
+  # concatenate chromosome-wise data frames to
+  # a data frame for the whole genome
+  if (i == 1) {
+    wgscan.vrinda <- scan
+  } else {
+    wgscan.vrinda <- rbind(wgscan.vrinda, scan)
+  }
+}
+
+#BSW scan
+for(i in 1:29) {
+  # vcf file name for each chromosome
+  vcf_file = paste(i, ".BSW.vcf.gz", sep = "")
+  # create internal representation
+  hh <- data2haplohh(hap_file = vcf_file,
+                     polarize_vcf = F,
+                     map_file = "rehhmap", 
+                     chr.name = i,
+                     allele_coding = "map")
+  # perform scan on a single chromosome (calculate iHH values)
+  scan <- scan_hh(hh)
+  # concatenate chromosome-wise data frames to
+  # a data frame for the whole genome
+  if (i == 1) {
+    wgscan.bsw <- scan
+  } else {
+    wgscan.bsw <- rbind(wgscan.bsw, scan)
+  }
+}
+
+#Holstein scan
+
+for(i in 1:29) {
+  # vcf file name for each chromosome
+  vcf_file = paste(i, ".holstein.vcf.gz", sep = "")
+  # create internal representation
+  hh <- data2haplohh(hap_file = vcf_file,
+                     polarize_vcf = F,
+                     map_file = "rehhmap", 
+                     chr.name = i,
+                     allele_coding = "map")
+  # perform scan on a single chromosome (calculate iHH values)
+  scan <- scan_hh(hh)
+  # concatenate chromosome-wise data frames to
+  # a data frame for the whole genome
+  if (i == 1) {
+    wgscan.holstein <- scan
+  } else {
+    wgscan.holstein <- rbind(wgscan.holstein, scan)
+  }
+}
+
+#jersey scan
+
+for(i in 1:29) {
+  # vcf file name for each chromosome
+  vcf_file = paste(i, ".jersey.vcf.gz", sep = "")
+  # create internal representation
+  hh <- data2haplohh(hap_file = vcf_file,
+                     polarize_vcf = F,
+                     map_file = "rehhmap", 
+                     chr.name = i,
+                     allele_coding = "map")
+  # perform scan on a single chromosome (calculate iHH values)
+  scan <- scan_hh(hh)
+  # concatenate chromosome-wise data frames to
+  # a data frame for the whole genome
+  if (i == 1) {
+    wgscan.jersey <- scan
+  } else {
+    wgscan.jersey <- rbind(wgscan.jersey, scan)
+  }
+}
+
+#hariana scan
+
+for(i in 1:29) {
+  # vcf file name for each chromosome
+  vcf_file = paste(i, ".hariana.vcf.gz", sep = "")
+  # create internal representation
+  hh <- data2haplohh(hap_file = vcf_file,
+                     polarize_vcf = F,
+                     map_file = "rehhmap", 
+                     chr.name = i,
+                     allele_coding = "map")
+  # perform scan on a single chromosome (calculate iHH values)
+  scan <- scan_hh(hh)
+  # concatenate chromosome-wise data frames to
+  # a data frame for the whole genome
+  if (i == 1) {
+    wgscan.hariana <- scan
+  } else {
+    wgscan.hariana <- rbind(wgscan.hariana, scan)
+  }
+}
+  
+#Vrinda vs BSW
+xpehh.vrinda_bsw <- ies2xpehh(scan_pop1 =  wgscan.vrinda,
+                           scan_pop2 =  wgscan.bsw,
+                           popname1 = "Vrindavani",
+                           popname2 = "Brown Swiss")
+
+
+
+#Vrinda vs Holstein
+xpehh.vrinda_holstein <- ies2xpehh(scan_pop1 =  wgscan.vrinda,
+                              scan_pop2 =  wgscan.holstein,
+                              popname1 = "Vrindavani",
+                              popname2 = "Holstein")
+
+
+#Vrinda vs jersey
+xpehh.vrinda_jersey <- ies2xpehh(scan_pop1 =  wgscan.vrinda,
+                                   scan_pop2 =  wgscan.jersey,
+                                   popname1 = "Vrindavani",
+                                   popname2 = "Jersey")
+
+
+
+#Vrinda vs hariana
+
+xpehh.vrinda_hariana <- ies2xpehh(scan_pop1 =  wgscan.vrinda,
+                                   scan_pop2 =  wgscan.hariana,
+                                   popname1 = "Vrindavani",
+                                   popname2 = "Hariana")
+
+#Remove NA
+
+xpehh.vrinda_hariana <- xpehh.vrinda_hariana %>% filter(!is.na(LOGPVALUE))
+xpehh.vrinda_bsw <- xpehh.vrinda_bsw %>% filter(!is.na(LOGPVALUE))
+xpehh.vrinda_jersey <- xpehh.vrinda_jersey %>% filter(!is.na(LOGPVALUE))
+xpehh.vrinda_holstein <- xpehh.vrinda_holstein %>% filter(!is.na(LOGPVALUE))
+
+#Plotting and analysis (ADJUST PARAEMTERS ACCORDING TO YOUR CHOICE)
+
+#Plot XPEHH value
+manhattanplot(xpehh.vrinda_bsw,pval = F,threshold = c(-3,3),ignore_sign = F)
+manhattanplot(xpehh.vrinda_jersey,pval = F,threshold = c(-3,3),ignore_sign = F)
+manhattanplot(xpehh.vrinda_holstein,pval = F,threshold = c(-3,3),ignore_sign = F)
+manhattanplot(xpehh.vrinda_hariana,pval = F,threshold = c(-3,3),ignore_sign = F)
+
+#calculate candidate regions where an SNP has maximum iHS >3. Scan window size 40 KB.
+candidate.vrinda.bsw <- calc_candidate_regions(xpehh.vrinda_bsw,threshold = 3, ignore_sign = T,window_size = 40000,join_neighbors = T)
+candidate.vrinda.holstein <- calc_candidate_regions(xpehh.vrinda_holstein,threshold = 3, ignore_sign = T,window_size = 40000,join_neighbors = T)
+candidate.vrinda.jersey <- calc_candidate_regions(xpehh.vrinda_jersey,threshold = 3, ignore_sign = T,window_size = 40000,join_neighbors = T)
+candidate.vrinda.hariana <- calc_candidate_regions(xpehh.vrinda_hariana,threshold = 3, ignore_sign = T,window_size = 40000,join_neighbors = T)
+
+#To concatanate CHR:Start:End for biomart friendly search format
+forbiomart.vrinda.bsw <- candidate.vrinda.bsw %>% unite("merged",CHR:START:END,sep = ":") %>% select(merged)
+forbiomart.vrinda.hariana <- candidate.vrinda.hariana %>% unite("merged",CHR:START:END,sep = ":") %>% select(merged)
+forbiomart.vrinda.holstein <- candidate.vrinda.holstein %>% unite("merged",CHR:START:END,sep = ":") %>% select(merged)
+forbiomart.vrinda.jersey <- candidate.vrinda.jersey %>% unite("merged",CHR:START:END,sep = ":") %>% select(merged)
+
+#Search candidate regions in biomart
+ensembl = useMart("ensembl",dataset="btaurus_gene_ensembl")
+vrinda.bsw.genes <- getBM(attributes = c("chromosome_name","start_position","end_position","ensembl_gene_id","external_gene_name"), filters = 'chromosomal_region', values = forbiomart.vrinda.bsw$merged,mart = ensembl)
+vrinda.holstein.genes <- getBM(attributes = c("chromosome_name","start_position","end_position","ensembl_gene_id","external_gene_name"), filters = 'chromosomal_region', values = forbiomart.vrinda.holstein$merged,mart = ensembl)
+vrinda.hariana.genes <- getBM(attributes = c("chromosome_name","start_position","end_position","ensembl_gene_id","external_gene_name"), filters = 'chromosomal_region', values = forbiomart.vrinda.hariana$merged,mart = ensembl)
+vrinda.jersey.genes <- getBM(attributes = c("chromosome_name","start_position","end_position","ensembl_gene_id","external_gene_name"), filters = 'chromosomal_region', values = forbiomart.vrinda.jersey$merged,mart = ensembl)
