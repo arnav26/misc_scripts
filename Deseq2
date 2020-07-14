@@ -1,0 +1,74 @@
+  library(DESeq2)
+  library(tidyverse)
+  model <- read.table("newmodel", header = T)
+  levels(model$condition)  <- c("Unvaccinated","Vaccinated")
+  counts <- as.matrix(read.table("tximport_raw_gene_counts", header = T, row.names = 'Genes'))
+  counts <- round(counts)
+  dds <- DESeqDataSetFromMatrix(countData = counts,
+                               colData = model,
+                                design = ~ condition + breed)
+  
+  
+  
+  #for each gene atleast 3 samples must have count of 10 or higher
+  keep <- rowSums(counts(dds) >= 10) >= 3
+  dds <- dds[keep,]
+  
+  #Variance transformation for PCA and heatmap
+  library(vsn)
+  vsd <- vst(dds, blind = FALSE)
+  
+  #Heatmap plot
+  sampleDists <- dist(t(assay(vsd)))
+  sampleDistMatrix <- as.matrix( sampleDists )
+  colnames(sampleDistMatrix) <- NULL
+  colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+  pheatmap(sampleDistMatrix,
+           clustering_distance_rows = sampleDists,
+           clustering_distance_cols = sampleDists,
+           col = colors)
+  
+  #PCA Plot
+  plotPCA(vsd, intgroup = c("breed", "condition"))
+  
+  #DEG Analysis
+  
+  dds <- DESeqDataSetFromMatrix(countData = counts,
+                                colData = model,
+                                design = ~ condition + breed)
+  keep <- rowSums(counts(dds) >= 10) >= 3
+  dds <- dds[keep,]
+  dds$group <- as.factor(paste0(dds$condition,dds$breed))
+  design(dds) <- ~group 
+  dds <- DESeq(dds)
+  
+  #read orthologs
+  orth <- read.table("manual_orthologs.csv", sep = "\t")
+  colnames(orth)[2] <- "Genes"
+  #Extract_results and concatanate with orthologs
+  GhurEuroPre <- cbind(orth$Genes,as.data.frame(results(dds, contrast=c("group","UnvaccinatedGHUR","UnvaccinatedEURO"))))
+  GhurEuroPost <- cbind(orth$Genes,as.data.frame(results(dds, contrast=c("group","VaccinatedGHUR","VaccinatedEURO"))))
+  GhurPostPre <- cbind(orth$Genes,as.data.frame(results(dds, contrast=c("group","VaccinatedGHUR","UnvaccinatedGHUR"))))
+  EuroPostPre <- cbind(orth$Genes,as.data.frame(results(dds, contrast=c("group","VaccinatedEURO","UnvaccinatedEURO"))))
+  
+  #Ranklists
+  GhurEuroPreranktmp <- GhurEuroPre %>% select(`orth$Genes`,log2FoldChange,padj)
+  GhurEuroPostranktmp <- GhurEuroPost %>% select(`orth$Genes`,log2FoldChange,padj)
+  GhurPostPreranktmp <- GhurPostPre %>% select(`orth$Genes`,log2FoldChange,padj)
+  EuroPostPreranktmp <- EuroPostPre %>% select(`orth$Genes`,log2FoldChange,padj)
+
+ GhurEuroPrerank <- GhurEuroPreranktmp %>% filter(`orth$Genes` != "") %>% group_by(`orth$Genes`) %>% mutate(rank = -log10(padj) * sign(log2FoldChange)) %>% select(`orth$Genes`,rank)
+ GhurEuroPostrank <- GhurEuroPostranktmp %>% filter(`orth$Genes` != "") %>% group_by(`orth$Genes`) %>% mutate(rank = -log10(padj) * sign(log2FoldChange)) %>% select(`orth$Genes`,rank)
+ GhurPostPrerank <- GhurPostPreranktmp %>% filter(`orth$Genes` != "") %>% group_by(`orth$Genes`) %>% mutate(rank = -log10(padj) * sign(log2FoldChange)) %>% select(`orth$Genes`,rank)
+ EuroPostPrerank <- EuroPostPreranktmp %>% filter(`orth$Genes` != "") %>% group_by(`orth$Genes`) %>% mutate(rank = -log10(padj) * sign(log2FoldChange)) %>% select(`orth$Genes`,rank)
+
+ GhurEuroPrerank <- GhurEuroPrerank %>% filter(!is.na(rank)) %>% arrange(rank)
+ GhurEuroPostrank <- GhurEuroPostrank %>% filter(!is.na(rank)) %>% arrange(rank)
+ GhurPostPrerank <- GhurPostPrerank %>% filter(!is.na(rank)) %>% arrange(rank)
+ EuroPostPrerank <- EuroPostPrerank %>% filter(!is.na(rank)) %>% arrange(rank)
+ 
+ write.table(GhurEuroPrerank,"GhurEuroPrerank.rnk",quote = F,col.names = F,row.names = F,sep = "\t")
+ write.table(GhurEuroPostrank,"GhurEuroPostrank.rnk",quote = F,col.names = F,row.names = F,sep = "\t")
+ write.table(GhurPostPrerank,"GhurPostPrerank.rnk",quote = F,col.names = F,row.names = F,sep = "\t")
+ write.table(EuroPostPrerank,"EuroPostPrerank.rnk",quote = F,col.names = F,row.names = F,sep = "\t")
+ 
