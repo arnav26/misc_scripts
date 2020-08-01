@@ -7,10 +7,9 @@ for(i in 1:29) {
   vcf_file = paste(i, ".vrindacleanphased.vcf.gz", sep = "")
   # create internal representation
   hh <- data2haplohh(hap_file = vcf_file,
-                     polarize_vcf = F,
-                     map_file = "rehhmap", 
+                     polarize_vcf = T,
                      chr.name = i,
-                     allele_coding = "map")
+                     )
   # perform scan on a single chromosome (calculate iHH values)
   scan <- scan_hh(hh)
   # concatenate chromosome-wise data frames to
