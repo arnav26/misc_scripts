@@ -1,5 +1,9 @@
-  library(DESeq2)
-  library(tidyverse)
+library(DESeq2)
+library(tidyverse)
+library(vsn)
+library(pheatmap)
+library(RColorBrewer)
+
   model <- read.table("newmodel", header = T)
   levels(model$condition)  <- c("Unvaccinated","Vaccinated")
   counts <- as.matrix(read.table("tximport_raw_gene_counts", header = T, row.names = 'Genes'))
@@ -15,7 +19,6 @@
   dds <- dds[keep,]
   
   #Variance transformation for PCA and heatmap
-  library(vsn)
   vsd <- vst(dds, blind = FALSE)
   
   #Heatmap plot
