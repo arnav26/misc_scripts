@@ -1,0 +1,28 @@
+#Takes in Kallisto counts and outputs gene level aggregate matrix for DESeq2.
+
+library(tximport)
+library(biomaRt)
+
+#Prepare transcript and gene list using biomart database (mouse in this case)
+
+mart <- biomaRt::useMart(biomart = "ENSEMBL_MART_ENSEMBL",
+                         dataset = "mmusculus_gene_ensembl",
+                         host = 'ensembl.org')
+
+t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id_version", "ensembl_gene_id"), mart = mart)
+
+#Get list of Kallisto output files
+samples <- list.files()
+#Make path to abundance file in each folder
+files <- file.path(samples,"abundance.h5")
+
+#Import kallisto files, normalize using Scaled TPM method. Aggregate according to gene name
+txi.kallisto <- tximport(files,type = "kallisto", tx2gene = t2g, countsFromAbundance = "lengthScaledTPM")
+
+#Assign sample names to counts columns
+colnames(txi.kallisto$counts) <- samples
+
+#Round the counts to nearest integer and save file
+counts <- txi.kallisto$counts
+counts <- round(counts)
+write.table(counts,"gene_counts",quote = F)
