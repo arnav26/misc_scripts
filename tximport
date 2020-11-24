@@ -1,4 +1,4 @@
-#Takes in Kallisto counts and outputs gene level aggregate matrix for DESeq2.
+#Takes in Kallisto abundances (TPM) at transcript level and outputs gene level aggregate count matrix for DESeq2.
 
 library(tximport)
 library(biomaRt)
