@@ -47,4 +47,4 @@ while i <= x.shape[0]-1:
     
 
 result = pd.DataFrame(cnvresults, columns = ['Chr','Start','End','Type'])
-print(result)
+result.to_csv('merged_cnvrs.txt', index= False)
