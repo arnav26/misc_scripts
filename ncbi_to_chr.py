@@ -1,5 +1,4 @@
-#Takes in input GTF, chrom alias table containing #NCBI chrs in col1 and CHRID in col2 and output gtf with replaced NCBI CHRIDs.
-
+#Takes in input GTF, a chrom alias table containing NCBI chromosome IDs(NCxxx.1) in col1 and CHRID(MT,1,2,3..26) in col2 and outputs a gtf with replaced NCBI chromosomes.
 import pandas as pd
 import numpy as np
 import csv
