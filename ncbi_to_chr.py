@@ -1,3 +1,5 @@
+#Takes in input GTF, chrom alias table containing #NCBI chrs in col1 and CHRID in col2 and output gtf with replaced NCBI CHRIDs.
+
 import pandas as pd
 import numpy as np
 import csv
