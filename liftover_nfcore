@@ -1,0 +1,2 @@
+#nfcore liftover command
+sbatch --time=12:00:00 --mem-per-cpu=2G --cpus-per-task=100 --wrap "nextflow run nf-LO/ --max_memory 200.GB --max-cpus 100 --max_time 12.h --source /cluster/scratch/amehrotra/isoseq_rsii/reference/Sus_scrofa.Sscrofa11.1.dna.toplevel.fa.gz --target /cluster/scratch/amehrotra/isoseq_rsii/reference/hap1.scaffolds.fa --distance near --annotation /cluster/work/pausch/arnav/imputation/suisag_all_target/concated_conformed.vcf.gz --annotation_format vcf"
